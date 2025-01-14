@@ -1,0 +1,112 @@
+
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#define SIZE 5 // Tamanho do tabuleiro
+#define NUM_NAVIOS 3 // Número de navios no tabuleiro
+
+// Funções auxiliares
+void inicializarTabuleiro(char tabuleiro[SIZE][SIZE]) {
+    int i, j; // Declaração fora do loop
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            tabuleiro[i][j] = '~'; // Água
+        }
+    }
+}
+
+void posicionarNavios(char tabuleiro[SIZE][SIZE], int navios[NUM_NAVIOS][2]) {
+    int i, x, y; // Declaração fora do loop
+    srand(time(NULL));
+    for (i = 0; i < NUM_NAVIOS; i++) {
+        do {
+            x = rand() % SIZE;
+            y = rand() % SIZE;
+        } while (tabuleiro[x][y] == 'N'); // Evita colocar dois navios na mesma posição
+        tabuleiro[x][y] = 'N';
+        navios[i][0] = x;
+        navios[i][1] = y;
+    }
+}
+
+void exibirTabuleiro(char tabuleiro[SIZE][SIZE], int mostrarNavios) {
+    int i, j; // Declaração fora do loop
+    printf("   ");
+    for (i = 0; i < SIZE; i++) printf("%d ", i);
+    printf("\n");
+
+    for (i = 0; i < SIZE; i++) {
+        printf("%d  ", i);
+        for (j = 0; j < SIZE; j++) {
+            if (mostrarNavios || tabuleiro[i][j] != 'N')
+                printf("%c ", tabuleiro[i][j]);
+            else
+                printf("~ ");
+        }
+        printf("\n");
+    }
+}
+
+int atacar(char tabuleiro[SIZE][SIZE], int x, int y) {
+    if (tabuleiro[x][y] == 'N') {
+        tabuleiro[x][y] = 'X'; // Navio atingido
+        return 1;
+    } else if (tabuleiro[x][y] == '~') {
+        tabuleiro[x][y] = 'O'; // Água atingida
+        return 0;
+    }
+    return -1; // Já atacado
+}
+
+int todosNaviosAfundados(char tabuleiro[SIZE][SIZE], int navios[NUM_NAVIOS][2]) {
+    int i; // Declaração fora do loop
+    for (i = 0; i < NUM_NAVIOS; i++) {
+        if (tabuleiro[navios[i][0]][navios[i][1]] != 'X') {
+            return 0; // Ainda há navios
+        }
+    }
+    return 1; // Todos os navios foram afundados
+}
+
+// Função principal
+int main() {
+    char tabuleiro[SIZE][SIZE];
+    int navios[NUM_NAVIOS][2];
+    int tentativas = 0;
+    int x, y; // Declaração fora do loop
+
+    inicializarTabuleiro(tabuleiro);
+    posicionarNavios(tabuleiro, navios);
+
+    printf("Bem-vindo ao jogo de Batalha Naval!\n");
+    printf("Você deve tentar afundar todos os navios escondidos no tabuleiro %dx%d.\n\n", SIZE, SIZE);
+
+    while (!todosNaviosAfundados(tabuleiro, navios)) {
+        exibirTabuleiro(tabuleiro, 0);
+
+        printf("\nDigite as coordenadas do ataque (linha e coluna): ");
+        scanf("%d %d", &x, &y);
+
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) {
+            printf("Coordenadas inválidas! Tente novamente.\n");
+            continue;
+        }
+
+        int resultado = atacar(tabuleiro, x, y);
+        if (resultado == 1) {
+            printf("Você acertou um navio!\n");
+        } else if (resultado == 0) {
+            printf("Você acertou a água.\n");
+        } else {
+            printf("Você já atacou essa posição. Tente novamente.\n");
+        }
+
+        tentativas++;
+    }
+
+    printf("\nParabéns! Você afundou todos os navios em %d tentativas.\n", tentativas);
+    exibirTabuleiro(tabuleiro, 1);
+
+    system("pause"); // Para manter a janela aberta
+    return 0;
+}
